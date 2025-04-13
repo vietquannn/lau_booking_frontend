@@ -79,10 +79,6 @@ function App() {
       {/* <Route path="/forgot-password" element={<ForgotPasswordPage />} /> */}
 
 
-      {/* ========================== */}
-      {/*      ADMIN ROUTES          */}
-      {/* ========================== */}
-
       {/* Trang Login của Admin */}
       <Route path="/admin/login" element={<AdminLoginPage />} />
 
@@ -100,19 +96,8 @@ function App() {
               <Route path="users" element={<AdminUserListPage />} />
               <Route path="reviews" element={<AdminReviewListPage />} />
               <Route path="promotions" element={<AdminPromotionListPage />} />
-              {/* TODO: Thêm các route chi tiết, sửa, xóa cho Admin */}
-              {/* Ví dụ:
-              <Route path="bookings/:bookingId" element={<AdminBookingDetailPage />} />
-              <Route path="categories/create" element={<AdminCategoryEditPage />} />
-              <Route path="categories/:slug/edit" element={<AdminCategoryEditPage />} />
-              ...tương tự cho các resource khác...
-              */}
           </Route>
       </Route>
-
-      {/* ========================== */}
-      {/*      NOT FOUND ROUTE       */}
-      {/* ========================== */}
        <Route path="*" element={<NotFoundPage />} /> {/* Đặt ở cuối cùng */}
 
     </Routes>
