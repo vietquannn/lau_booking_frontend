@@ -1,0 +1,20 @@
+/* src/pages/MenuPage.module.css */
+.categoryTitle {
+    margin-top: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 3px solid var(--bs-warning);
+    font-weight: 600;
+    color: #343a40;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .loadingSpinner {
+      margin-top: 5rem;
+      color: var(--bs-primary);
+  }
+  
+  .errorMessage {
+      margin-top: 2rem;
+  }
