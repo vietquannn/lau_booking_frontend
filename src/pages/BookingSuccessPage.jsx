@@ -3,7 +3,7 @@ import { Container, Alert, Card, Button, Row, Col, Image, ListGroup, Badge } fro
 import { useLocation, Link, Navigate } from 'react-router-dom';
 
 // Lấy base URL ảnh từ biến môi trường (nếu API trả về đường dẫn tương đối)
-const API_IMAGE_BASE_URL = import.meta.env.VITE_API_IMAGE_BASE_URL || 'http://restaurant-booking.test';
+const API_IMAGE_BASE_URL = import.meta.env.VITE_API_IMAGE_BASE_URL || 'http://vietquannn.id.vn';
 
 // Hàm xử lý URL ảnh
 const getImageUrl = (imageUrl) => {

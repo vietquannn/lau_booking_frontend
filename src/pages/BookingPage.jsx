@@ -11,7 +11,7 @@ import vi from 'date-fns/locale/vi';
 registerLocale('vi', vi);
 
 // Base URL ảnh
-const API_IMAGE_BASE_URL = import.meta.env.VITE_API_IMAGE_BASE_URL || 'http://restaurant-booking.test';
+const API_IMAGE_BASE_URL = import.meta.env.VITE_API_IMAGE_BASE_URL || 'http://vietquannn.id.vn';
 
 // Debounce function
 const debounce = (func, delay) => {

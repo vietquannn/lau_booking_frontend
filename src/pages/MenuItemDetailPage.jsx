@@ -8,7 +8,7 @@ import { useAuth } from '../hooks/useAuth'; // Hook xác thực & yêu thích
 import { favoriteService } from '../services/favorite.service'; // Service yêu thích
 
 // Base URL ảnh
-const API_IMAGE_BASE_URL = import.meta.env.VITE_API_IMAGE_BASE_URL || 'http://restaurant-booking.test';
+const API_IMAGE_BASE_URL = import.meta.env.VITE_API_IMAGE_BASE_URL || 'http://vietquannn.id.vn';
 
 // Component Tooltip
 const renderTooltip = (props, text) => (

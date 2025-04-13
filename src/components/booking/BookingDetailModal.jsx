@@ -4,7 +4,7 @@ import { Modal, Button, Spinner, Alert, Row, Col, ListGroup, Image, Badge } from
 import { Link } from 'react-router-dom';
 
 // Base URL ảnh
-const API_IMAGE_BASE_URL = import.meta.env.VITE_API_IMAGE_BASE_URL || 'http://restaurant-booking.test';
+const API_IMAGE_BASE_URL = import.meta.env.VITE_API_IMAGE_BASE_URL || 'http://vietquannn.id.vn';
 
 // Nhận thêm prop onCancelBooking từ MyBookingsPage
 function BookingDetailModal({ show, handleClose, booking, loading, error, onCancelBooking }) {

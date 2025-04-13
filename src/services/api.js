@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 // Lấy API base URL từ biến môi trường, có giá trị mặc định dự phòng
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://restaurant-booking.test/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://vietquannn.id.vn/api';
 console.log("API Base URL:", API_BASE_URL); // Log để kiểm tra khi khởi động
 
 // Tạo một instance Axios với cấu hình cơ bản

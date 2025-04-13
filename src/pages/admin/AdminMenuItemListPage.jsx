@@ -7,7 +7,7 @@ import { adminCategoryService } from '../../services/admin.category.service'; //
 import { useAuthAdmin } from '../../hooks/useAuthAdmin'; // Optional
 
 // Base URL ảnh
-const API_IMAGE_BASE_URL = import.meta.env.VITE_API_IMAGE_BASE_URL || 'http://restaurant-booking.test';
+const API_IMAGE_BASE_URL = import.meta.env.VITE_API_IMAGE_BASE_URL || 'http://vietquannn.id.vn';
 const DEFAULT_PLACEHOLDER_IMAGE = `${API_IMAGE_BASE_URL}/storage/menu_images/placeholder.jpg`;
 
 // --- Tooltip Component ---
@@ -535,20 +535,21 @@ function AdminMenuItemListPage() {
 
     // Hàm xử lý đường dẫn ảnh
     const getImageUrl = (imageUrl) => {
+    
         if (!imageUrl) return DEFAULT_PLACEHOLDER_IMAGE;
-        
+    
         // Nếu đã là URL đầy đủ, trả về nguyên
         if (imageUrl.startsWith('http')) {
             return imageUrl;
         }
-        
-        // Nếu bắt đầu bằng /storage, thêm domain gốc
-        if (imageUrl.startsWith('/storage')) {
+    
+        // Nếu là đường dẫn bắt đầu bằng /menu_images thì gắn domain vào
+        if (imageUrl.startsWith('/menu_images')) {
             return `${API_IMAGE_BASE_URL}${imageUrl}`;
         }
-        
-        // Trường hợp còn lại, thêm /storage/ vào trước
-        return `${API_IMAGE_BASE_URL}/storage/${imageUrl}`;
+    
+        // Trường hợp fallback
+        return DEFAULT_PLACEHOLDER_IMAGE;
     };
 
     // ---- Render ----
