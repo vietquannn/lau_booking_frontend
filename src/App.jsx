@@ -83,7 +83,7 @@ function App() {
       <Route path="/admin/login" element={<AdminLoginPage />} />
 
       {/* Các trang Admin cần đăng nhập */}
-      <Route path="/admin" element={<AdminProtectedRoute />}> {/* Bảo vệ */}
+      <Route path="/admin" > {/* Bảo vệ */}
           <Route element={<AdminLayout />}> {/* Dùng layout admin */}
               {/* Trang chính admin */}
               <Route index element={<AdminDashboardPage />} />

@@ -1,22 +1,26 @@
 // src/components/auth/AdminProtectedRoute.jsx
 import React from 'react';
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useAuthAdmin } from '../../hooks/useAuthAdmin'; // <<--- DÙNG HOOK ADMIN
-import { Spinner, Container } from 'react-bootstrap';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuthAdmin } from '../../hooks/useAuthAdmin';
+import { Spinner } from 'react-bootstrap';
 
-function AdminProtectedRoute() {
-  const { isAdminAuthenticated, loading } = useAuthAdmin(); // <<--- Lấy state từ hook admin
+function AdminProtectedRoute({ children }) {
+  const { isAdminAuthenticated, loading } = useAuthAdmin();
   const location = useLocation();
 
-  if (loading) { // <<--- Check loading từ context admin
-    return <Container className="vh-100 d-flex justify-content-center align-items-center"><Spinner animation="border" variant="primary" /></Container>;
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
+        <Spinner animation="border" />
+      </div>
+    );
   }
 
-  if (!isAdminAuthenticated) { // <<--- Check isAuthenticated từ context admin
-    console.log('Admin not authenticated, redirecting to admin login from:', location.pathname);
+  if (!isAdminAuthenticated) {
     return <Navigate to="/admin/login" replace state={{ from: location }} />;
   }
 
-  return <Outlet />;
+  return children;
 }
+
 export default AdminProtectedRoute;

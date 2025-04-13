@@ -25,12 +25,12 @@ apiClient.interceptors.request.use(
 
     // Kiểm tra xem request có phải dành cho API Admin không
     if (url.startsWith('/admin')) {
-        // console.log("Request is for ADMIN API, getting admin token...");
-        token = localStorage.getItem('adminAuthToken'); // Lấy token Admin
+      // console.log("Request is for ADMIN API, getting admin token...");
+      token = localStorage.getItem('adminToken'); // Lấy token Admin
     } else {
-        // Mặc định là lấy token User
-        // console.log("Request is for USER API, getting user token...");
-        token = localStorage.getItem('authToken'); // Lấy token User
+      // Mặc định là lấy token User
+      // console.log("Request is for USER API, getting user token...");
+      token = localStorage.getItem('authToken'); // Lấy token User
     }
 
     // Nếu có token, thêm vào header Authorization
@@ -38,9 +38,9 @@ apiClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
       // console.log("Token found and added to headers.");
     } else {
-         // Đảm bảo xóa header nếu không có token (quan trọng khi chuyển đổi giữa login/logout)
-         delete config.headers.Authorization;
-         // console.log("No token found for this request type.");
+      // Đảm bảo xóa header nếu không có token (quan trọng khi chuyển đổi giữa login/logout)
+      delete config.headers.Authorization;
+      // console.log("No token found for this request type.");
     }
 
     // Log request để debug (có thể bỏ đi ở production)
@@ -68,42 +68,42 @@ apiClient.interceptors.response.use(
   (error) => {
     // Bất kỳ status code nào ngoài khoảng 2xx sẽ vào đây
     console.error(
-        'Response Error Interceptor:',
-        error.response?.status, // Status code lỗi (vd: 401, 404, 422, 500)
-        error.response?.data || error.message, // Data lỗi từ backend hoặc message lỗi chung
-        'URL:', error.config.url // URL gây ra lỗi
+      'Response Error Interceptor:',
+      error.response?.status, // Status code lỗi (vd: 401, 404, 422, 500)
+      error.response?.data || error.message, // Data lỗi từ backend hoặc message lỗi chung
+      'URL:', error.config.url // URL gây ra lỗi
     );
 
     // Xử lý lỗi 401 Unauthorized (Token sai, hết hạn, hoặc chưa đăng nhập)
     if (error.response && error.response.status === 401) {
       console.log('Unauthorized! Clearing potentially invalid auth data...');
-       const url = error.config.url || ''; // URL gây lỗi 401
+      const url = error.config.url || ''; // URL gây lỗi 401
 
-       // Quyết định xóa token nào dựa trên URL
-       if (url.startsWith('/admin')) { // Nếu là API Admin gây lỗi 401
-            localStorage.removeItem('adminAuthToken');
-            localStorage.removeItem('adminData');
-             console.log("Cleared ADMIN auth data due to 401.");
-             // Chuyển hướng về trang login admin nếu chưa ở đó
-             if (!window.location.pathname.startsWith('/admin/login')) {
-                 // Thêm thông báo vào URL để trang login biết lý do redirect
-                window.location.href = '/admin/login?message=session_expired_or_invalid';
-             }
-       } else { // Mặc định là lỗi từ API User
-           localStorage.removeItem('authToken');
-           localStorage.removeItem('userData');
-            console.log("Cleared USER auth data due to 401.");
-            // Chuyển hướng về trang login user nếu chưa ở đó
-             if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/register')) {
-                 // Thêm thông báo vào URL
-                window.location.href = '/login?message=session_expired_or_invalid';
-             }
-       }
-       // Quan trọng: Không ném lỗi 401 ra ngoài nữa nếu đã xử lý redirect,
-       // trừ khi bạn muốn component cha xử lý thêm.
-       // return Promise.reject(error); // Ném lại lỗi để component bắt nếu cần
-       // Hoặc trả về một promise bị reject với thông báo khác
-       return Promise.reject({ handled: true, message: 'Phiên đăng nhập hết hạn hoặc không hợp lệ.' });
+      // Quyết định xóa token nào dựa trên URL
+      if (url.startsWith('/admin')) { // Nếu là API Admin gây lỗi 401
+        localStorage.removeItem('adminToken');
+        localStorage.removeItem('adminData');
+        console.log("Cleared ADMIN auth data due to 401.");
+        // Chuyển hướng về trang login admin nếu chưa ở đó
+        if (!window.location.pathname.startsWith('/admin/login')) {
+          // Thêm thông báo vào URL để trang login biết lý do redirect
+          window.location.href = '/admin/login?message=session_expired_or_invalid';
+        }
+      } else { // Mặc định là lỗi từ API User
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userData');
+        console.log("Cleared USER auth data due to 401.");
+        // Chuyển hướng về trang login user nếu chưa ở đó
+        if (!window.location.pathname.startsWith('/login') && !window.location.pathname.startsWith('/register')) {
+          // Thêm thông báo vào URL
+          window.location.href = '/login?message=session_expired_or_invalid';
+        }
+      }
+      // Quan trọng: Không ném lỗi 401 ra ngoài nữa nếu đã xử lý redirect,
+      // trừ khi bạn muốn component cha xử lý thêm.
+      // return Promise.reject(error); // Ném lại lỗi để component bắt nếu cần
+      // Hoặc trả về một promise bị reject với thông báo khác
+      return Promise.reject({ handled: true, message: 'Phiên đăng nhập hết hạn hoặc không hợp lệ.' });
     }
 
     // Ném lỗi ra ngoài để các hàm gọi API có thể bắt và xử lý (cho các lỗi khác 401)
