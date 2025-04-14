@@ -4,7 +4,7 @@
 // import { adminMenuItemService } from '../../../services/admin.menuitem.service'; // Service
 
 // // Base URL ảnh (để hiển thị ảnh cũ)
-// const API_IMAGE_BASE_URL = import.meta.env.VITE_API_IMAGE_BASE_URL || 'http://restaurant-booking.test';
+// const API_IMAGE_BASE_URL = import.meta.env.VITE_API_IMAGE_BASE_URL || 'https://vietquannn.id.vn';
 
 // function MenuItemModal({ show, handleClose, menuItemData, categories = [], onSave }) {
 //     const [formData, setFormData] = useState({});

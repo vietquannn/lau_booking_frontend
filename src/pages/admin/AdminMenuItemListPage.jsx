@@ -7,8 +7,8 @@ import { adminCategoryService } from '../../services/admin.category.service'; //
 import { useAuthAdmin } from '../../hooks/useAuthAdmin'; // Optional
 
 // Base URL ảnh
-const API_IMAGE_BASE_URL = import.meta.env.VITE_API_IMAGE_BASE_URL || 'http://vietquannn.id.vn';
-const DEFAULT_PLACEHOLDER_IMAGE = `${API_IMAGE_BASE_URL}/storage/menu_images/placeholder.jpg`;
+const API_IMAGE_BASE_URL = import.meta.env.VITE_API_IMAGE_BASE_URL || 'https://vietquannn.id.vn';
+const DEFAULT_PLACEHOLDER_IMAGE = `${API_IMAGE_BASE_URL}/menu_images/placeholder.jpg`;
 
 // --- Tooltip Component ---
 const renderTooltip = (props, text) => ( <Tooltip {...props}>{text}</Tooltip> );
@@ -52,7 +52,7 @@ function MenuItemFormModal({ show, handleClose, currentItem, categories, onSaveS
                 });
                  // Hiển thị ảnh hiện tại nếu đang sửa
                 const currentImageUrl = currentItem.image_url
-                    ? (currentItem.image_url.startsWith('http') || currentItem.image_url.startsWith('/storage') ? currentItem.image_url : `${API_IMAGE_BASE_URL}${currentItem.image_url}`)
+                    ? (currentItem.image_url.startsWith('http') || currentItem.image_url.startsWith('') ? currentItem.image_url : `${API_IMAGE_BASE_URL}${currentItem.image_url}`)
                     : null;
                 setImagePreview(currentImageUrl);
             } else {
@@ -85,7 +85,7 @@ function MenuItemFormModal({ show, handleClose, currentItem, categories, onSaveS
              // Nếu hủy chọn file, giữ lại ảnh preview cũ (nếu đang sửa) hoặc xóa đi
              setFormData(prev => ({ ...prev, image: null }));
              const currentImageUrl = isEditing && currentItem?.image_url
-                ? (currentItem.image_url.startsWith('http') || currentItem.image_url.startsWith('/storage') ? currentItem.image_url : `${API_IMAGE_BASE_URL}${currentItem.image_url}`)
+                ? (currentItem.image_url.startsWith('http') || currentItem.image_url.startsWith('') ? currentItem.image_url : `${API_IMAGE_BASE_URL}${currentItem.image_url}`)
                 : null;
              setImagePreview(currentImageUrl);
         }
