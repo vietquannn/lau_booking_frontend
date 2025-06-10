@@ -534,26 +534,7 @@ function AdminMenuItemListPage() {
 
     // Hàm xử lý đường dẫn ảnh
 const getImageUrl = (imageUrl) => {
-    console.log('Input imageUrl:', imageUrl);
-    if (!imageUrl) {
-        console.log('Returning default:', DEFAULT_PLACEHOLDER_IMAGE);
-        return DEFAULT_PLACEHOLDER_IMAGE;
-    }
-
-    if (imageUrl.startsWith('http')) {
-        console.log('Returning full URL:', imageUrl);
-        return imageUrl;
-    }
-
-    if (imageUrl.startsWith('/images')) {
-        console.log('API_IMAGE_BASE_URL:', API_IMAGE_BASE_URL);
-        const fullUrl = `${API_IMAGE_BASE_URL}${imageUrl}`;
-        console.log('Returning constructed URL:', fullUrl);
-        return fullUrl;
-    }
-
-    console.log('Returning default (fallback):', DEFAULT_PLACEHOLDER_IMAGE);
-    return DEFAULT_PLACEHOLDER_IMAGE;
+    return `${API_IMAGE_BASE_URL}${imageUrl}`
 };
     // ---- Render ----
     return (
