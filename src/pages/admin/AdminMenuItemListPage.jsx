@@ -506,7 +506,6 @@ function AdminMenuItemListPage() {
             );
         }
 
-        // Nút Next
         items.push(
             <Pagination.Item
                 key="next"
@@ -534,24 +533,28 @@ function AdminMenuItemListPage() {
     };
 
     // Hàm xử lý đường dẫn ảnh
-    const getImageUrl = (imageUrl) => {
-    
-        if (!imageUrl) return DEFAULT_PLACEHOLDER_IMAGE;
-    
-        // Nếu đã là URL đầy đủ, trả về nguyên
-        if (imageUrl.startsWith('http')) {
-            return imageUrl;
-        }
-    
-        // Nếu là đường dẫn bắt đầu bằng /menu_images thì gắn domain vào
-        if (imageUrl.startsWith('/menu_images')) {
-            return `${API_IMAGE_BASE_URL}${imageUrl}`;
-        }
-    
-        // Trường hợp fallback
+const getImageUrl = (imageUrl) => {
+    console.log('Input imageUrl:', imageUrl);
+    if (!imageUrl) {
+        console.log('Returning default:', DEFAULT_PLACEHOLDER_IMAGE);
         return DEFAULT_PLACEHOLDER_IMAGE;
-    };
+    }
 
+    if (imageUrl.startsWith('http')) {
+        console.log('Returning full URL:', imageUrl);
+        return imageUrl;
+    }
+
+    if (imageUrl.startsWith('/images')) {
+        console.log('API_IMAGE_BASE_URL:', API_IMAGE_BASE_URL);
+        const fullUrl = `${API_IMAGE_BASE_URL}${imageUrl}`;
+        console.log('Returning constructed URL:', fullUrl);
+        return fullUrl;
+    }
+
+    console.log('Returning default (fallback):', DEFAULT_PLACEHOLDER_IMAGE);
+    return DEFAULT_PLACEHOLDER_IMAGE;
+};
     // ---- Render ----
     return (
         <Container fluid className="py-3">

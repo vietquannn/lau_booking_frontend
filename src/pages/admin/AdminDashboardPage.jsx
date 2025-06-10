@@ -64,7 +64,9 @@ function AdminDashboardPage() {
                         sort_dir: 'desc'
                     })
                 ]);
-
+                console.log(statsResponse);
+                console.log(bookingsResponse);
+                
                 // Xử lý stats
                 if (statsResponse.data?.success) {
                     setStats(statsResponse.data.data);
