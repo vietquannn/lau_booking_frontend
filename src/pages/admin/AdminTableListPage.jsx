@@ -213,7 +213,17 @@ function AdminTableListPage() {
                 
                 // Cập nhật state với dữ liệu đã sắp xếp
                 setTables(tablesData);
-                setPagination({ /* ... lưu phân trang ... */ });
+                
+                // Cập nhật thông tin phân trang từ API response
+                const paginationData = response.data.data;
+                setPagination({
+                    current_page: paginationData.current_page || 1,
+                    last_page: paginationData.last_page || 1,
+                    total: paginationData.total || 0,
+                    per_page: paginationData.per_page || 15,
+                    from: paginationData.from || 0,
+                    to: paginationData.to || 0
+                });
             } else { setError(response.data?.message || 'Lỗi tải danh sách bàn.'); setTables([]); setPagination({ current_page: 1, last_page: 1, total: 0 }); }
         } catch (err) {
             if (err.response?.status !== 401) { setError(err.response?.data?.message || err.message || 'Lỗi kết nối.'); }
@@ -307,9 +317,102 @@ function AdminTableListPage() {
 
 
     // --- Handler Phân Trang ---
-    const handlePageChange = (pageNumber) => { /* ... */ };
+    const handlePageChange = (pageNumber) => {
+        if (pageNumber < 1 || pageNumber > pagination.last_page || pageNumber === currentPage) return;
+        
+        const newSearchParams = new URLSearchParams(searchParams);
+        newSearchParams.set('page', pageNumber.toString());
+        setSearchParams(newSearchParams);
+    };
+
     // --- Render Phân Trang ---
-    const renderPagination = () => { /* ... (Copy từ trang trước) ... */ };
+    const renderPagination = () => {
+        if (pagination.last_page <= 1) return null;
+
+        const { current_page, last_page, total, from, to } = pagination;
+        const items = [];
+
+        // Nút Previous
+        items.push(
+            <Pagination.Prev
+                key="prev"
+                onClick={() => handlePageChange(current_page - 1)}
+                disabled={current_page === 1}
+            />
+        );
+
+        // Hiển thị các trang
+        const maxVisiblePages = 5;
+        let startPage = Math.max(1, current_page - Math.floor(maxVisiblePages / 2));
+        let endPage = Math.min(last_page, startPage + maxVisiblePages - 1);
+
+        if (endPage - startPage + 1 < maxVisiblePages) {
+            startPage = Math.max(1, endPage - maxVisiblePages + 1);
+        }
+
+        // Nút First Page nếu cần
+        if (startPage > 1) {
+            items.push(
+                <Pagination.Item
+                    key={1}
+                    onClick={() => handlePageChange(1)}
+                >
+                    1
+                </Pagination.Item>
+            );
+            if (startPage > 2) {
+                items.push(<Pagination.Ellipsis key="ellipsis1" />);
+            }
+        }
+
+        // Các trang chính
+        for (let page = startPage; page <= endPage; page++) {
+            items.push(
+                <Pagination.Item
+                    key={page}
+                    active={page === current_page}
+                    onClick={() => handlePageChange(page)}
+                >
+                    {page}
+                </Pagination.Item>
+            );
+        }
+
+        // Nút Last Page nếu cần
+        if (endPage < last_page) {
+            if (endPage < last_page - 1) {
+                items.push(<Pagination.Ellipsis key="ellipsis2" />);
+            }
+            items.push(
+                <Pagination.Item
+                    key={last_page}
+                    onClick={() => handlePageChange(last_page)}
+                >
+                    {last_page}
+                </Pagination.Item>
+            );
+        }
+
+        // Nút Next
+        items.push(
+            <Pagination.Next
+                key="next"
+                onClick={() => handlePageChange(current_page + 1)}
+                disabled={current_page === last_page}
+            />
+        );
+
+        return (
+            <div className="d-flex justify-content-between align-items-center mt-3">
+                <div className="text-muted small">
+                    Hiển thị {from} - {to} trong tổng số {total} bàn
+                </div>
+                <Pagination className="mb-0">
+                    {items}
+                </Pagination>
+            </div>
+        );
+    };
 
     // Hàm lấy variant màu cho status bàn
      const getTableStatusVariant = (status) => {

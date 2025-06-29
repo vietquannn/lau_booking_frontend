@@ -1,6 +1,6 @@
 // src/pages/BookingPage.jsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { Container, Row, Col, Form, Button, Spinner, Alert, Card, ListGroup, InputGroup, Badge, Image } from 'react-bootstrap';
+import { Container, Row, Col, Form, Button, Spinner, Alert, Card, ListGroup, InputGroup, Badge, Image, Modal } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { bookingService } from '../services/booking.service';
 import { useAuth } from '../hooks/useAuth'; // Hook xác thực
@@ -56,7 +56,7 @@ function BookingPage() {
 
     // --- Form States ---
     const [selectedDate, setSelectedDate] = useState(() => { const today = new Date(); today.setHours(0, 0, 0, 0); return today; });
-    const [numGuests, setNumGuests] = useState(2);
+    const [numGuests, setNumGuests] = useState('');
     const [specialRequests, setSpecialRequests] = useState('');
     const [promotionCode, setPromotionCode] = useState('');
     const [paymentMethod, setPaymentMethod] = useState('pay_later');
@@ -65,7 +65,6 @@ function BookingPage() {
     const [availableSlots, setAvailableSlots] = useState({ timeSlots: [], tableTypes: [] });
     const [availableTables, setAvailableTables] = useState([]);
     const [selectedTime, setSelectedTime] = useState('');
-    const [selectedTableType, setSelectedTableType] = useState('');
     const [selectedTableId, setSelectedTableId] = useState('');
     const [selectedTableSurcharge, setSelectedTableSurcharge] = useState(0);
 
@@ -77,21 +76,23 @@ function BookingPage() {
     const [submitting, setSubmitting] = useState(false);
     const [submitError, setSubmitError] = useState(null);
 
+    // --- Modal States ---
+    const [showImageModal, setShowImageModal] = useState(false);
+
     // --- API Callbacks ---
     const fetchAvailableSlots = useCallback(async (date, guests) => {
         if (!date || !guests || guests < 1 || !isAuthenticated) { // Thêm kiểm tra isAuthenticated
-            setAvailableSlots({ timeSlots: [], tableTypes: [] }); setSelectedTime(''); setSelectedTableType(''); setSelectedTableId(''); setAvailableTables([]); setSlotsError(null); setSelectedTableSurcharge(0); return;
+            setAvailableSlots({ timeSlots: [], tableTypes: [] }); setSelectedTime(''); setSelectedTableId(''); setAvailableTables([]); setSlotsError(null); setSelectedTableSurcharge(0); return;
         }
         setLoadingSlots(true); setSlotsError(null);
-        setAvailableSlots({ timeSlots: [], tableTypes: [] }); setSelectedTime(''); setSelectedTableType(''); setSelectedTableId(''); setAvailableTables([]); setSelectedTableSurcharge(0);
+        setAvailableSlots({ timeSlots: [], tableTypes: [] }); setSelectedTime(''); setSelectedTableId(''); setAvailableTables([]); setSelectedTableSurcharge(0);
         try {
             const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
             const response = await bookingService.getAvailableSlots(formattedDate, guests);
             if (response.data?.success) {
                 const data = response.data.data;
                 setAvailableSlots({ timeSlots: data.available_time_slots || [], tableTypes: data.available_table_types || [] });
-                if (!data.available_time_slots || data.available_time_slots.length === 0) { setSlotsError('Hết khung giờ trống.'); }
-                else { setSlotsError(null); }
+                setSlotsError(null);
             } else { setSlotsError(response.data?.message || 'Lỗi tìm khung giờ.'); }
         } catch (err) { setSlotsError(err.response?.data?.message || err.message || 'Lỗi kết nối.'); }
         finally { setLoadingSlots(false); }
@@ -106,6 +107,7 @@ function BookingPage() {
             const formattedDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
             const response = await bookingService.getAvailableTables(formattedDate, time, guests);
             if (response.data?.success) {
+                console.log('Available tables response:', response.data.data);
                 setAvailableTables(response.data.data || []);
                 if (!response.data.data || response.data.data.length === 0) { setTablesError(null); }
                 else { setTablesError(null); }
@@ -123,7 +125,7 @@ function BookingPage() {
         } else {
             // Reset state nếu không đăng nhập
             setAvailableSlots({ timeSlots: [], tableTypes: [] }); setAvailableTables([]);
-            setSelectedTime(''); setSelectedTableType(''); setSelectedTableId('');
+            setSelectedTime(''); setSelectedTableId('');
             setSlotsError(null); setTablesError(null);
         }
     }, [selectedDate, numGuests, fetchAvailableSlots, isAuthenticated]);
@@ -140,13 +142,21 @@ function BookingPage() {
         let surcharge = 0;
         if (selectedTableId) {
             const table = availableTables.find(t => t.id === parseInt(selectedTableId));
-            surcharge = table?.tableType?.surcharge || 0;
-        } else if (selectedTableType) {
-            const type = availableSlots.tableTypes.find(t => t.id === parseInt(selectedTableType));
-            surcharge = type?.surcharge || 0;
+            console.log('Selected table:', table);
+            console.log('Table type:', table?.tableType);
+            console.log('Surcharge:', table?.tableType?.surcharge);
+            
+            // Kiểm tra nhiều vị trí có thể chứa surcharge
+            surcharge = table?.tableType?.surcharge || 
+                       table?.surcharge || 
+                       table?.table_type?.surcharge ||
+                       table?.type?.surcharge ||
+                       0;
+            
+            console.log('Final surcharge:', surcharge);
         }
         setSelectedTableSurcharge(parseInt(surcharge) || 0); // Đảm bảo là số
-    }, [selectedTableId, selectedTableType, availableTables, availableSlots.tableTypes]);
+    }, [selectedTableId, availableTables]);
 
     // --- Tính tổng tiền tạm tính ---
     const calculatedSubtotal = cartTotalAmount + selectedTableSurcharge;
@@ -173,13 +183,23 @@ function BookingPage() {
         }
     };
 
+    // --- Image Modal Handlers ---
+    const handleImageClick = () => {
+        setShowImageModal(true);
+    };
+
+    const handleCloseImageModal = () => {
+        setShowImageModal(false);
+    };
+
     const handleSubmit = async (event) => {
         event.preventDefault();
         setSubmitting(true); setSubmitError(null);
 
         if (!isAuthenticated) { setSubmitError('Vui lòng đăng nhập.'); setSubmitting(false); navigate('/login?redirect=/booking'); return; }
+        if (!numGuests || numGuests < 1) { setSubmitError('Vui lòng nhập số khách.'); setSubmitting(false); return; }
         if (!selectedTime) { setSubmitError('Vui lòng chọn khung giờ.'); setSubmitting(false); return; }
-        if (!selectedTableId && !selectedTableType) { setSubmitError('Vui lòng chọn bàn.'); setSubmitting(false); return; }
+        if (!selectedTableId) { setSubmitError('Vui lòng chọn bàn.'); setSubmitting(false); return; }
 
         const bookingData = {
             booking_date: `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(selectedDate.getDate()).padStart(2, '0')}`,
@@ -187,8 +207,7 @@ function BookingPage() {
             num_guests: parseInt(numGuests),
             special_requests: specialRequests.trim() || null,
             payment_method: paymentMethod,
-            table_id: selectedTableId ? parseInt(selectedTableId) : null,
-            table_type_id: !selectedTableId && selectedTableType ? parseInt(selectedTableType) : null,
+            table_id: parseInt(selectedTableId),
             // Map cartItems lấy id và quantity
             items: cartItems.map(item => ({ menu_item_id: item.id, quantity: item.quantity })),
             promotion_code: promotionCode.trim() || null,
@@ -227,6 +246,20 @@ function BookingPage() {
         }
     };
 
+    const filterTablesByGuests = (tables, guests) => {
+        if (!tables || !guests || guests < 1) return [];
+        let targetCapacity = null;
+        if (guests === 1 || guests === 2) targetCapacity = 2;
+        else if (guests === 3 || guests === 4) targetCapacity = 4;
+        else if (guests === 5 || guests === 6) targetCapacity = 6;
+        else if (guests === 7 || guests === 8) targetCapacity = 8;
+        else return [];
+        return tables.filter(table => table.capacity === targetCapacity);
+    };
+
+    // Lọc bàn theo số khách
+    const filteredTables = filterTablesByGuests(availableTables, numGuests);
+
     // ---- Render ----
     return (
         <Container className="page-container">
@@ -259,7 +292,17 @@ function BookingPage() {
                                             <Form.Label className="fw-semibold">Số khách</Form.Label>
                                             <Form.Control
                                                 type="number" value={numGuests}
-                                                onChange={(e) => setNumGuests(Math.max(1, parseInt(e.target.value) || 1))}
+                                                onChange={(e) => {
+                                                    const value = e.target.value;
+                                                    if (value === '') {
+                                                        setNumGuests('');
+                                                    } else {
+                                                        const numValue = parseInt(value);
+                                                        if (!isNaN(numValue) && numValue >= 1) {
+                                                            setNumGuests(numValue);
+                                                        }
+                                                    }
+                                                }}
                                                 min="1" max="50" required
                                                 disabled={submitting || !isAuthenticated}
                                             />
@@ -268,6 +311,18 @@ function BookingPage() {
                                 </Row>
                                 {isAuthenticated && loadingSlots && <div className="text-center text-muted small"><Spinner size="sm" /> Đang tìm khung giờ...</div>}
                                 {isAuthenticated && slotsError && !loadingSlots && <Alert variant="warning" size="sm" className="mt-2 py-1 px-2">{slotsError}</Alert>}
+                                {numGuests > 8 && (
+                                    <Alert variant="warning" size="sm" className="mt-2 py-1 px-2">
+                                        <div className="small">
+                                            <i className="bi bi-exclamation-triangle me-1"></i>
+                                            <strong>Hiện tại nhà hàng chưa có bàn hợp lệ cho số lượng khách của bạn.</strong>
+                                            <br />
+                                            Vui lòng liên hệ theo hotline: <strong>0354076413</strong> để nhà hàng có thể sắp xếp bàn cho bạn.
+                                            <br />
+                                            Nhà hàng xin lỗi vì sự bất tiện này.
+                                        </div>
+                                    </Alert>
+                                )}
                             </Card.Body>
                         </Card>
 
@@ -293,22 +348,69 @@ function BookingPage() {
                                             {isAuthenticated && loadingTables && selectedTime && <div className='text-muted small mb-1'><Spinner size="sm" /> Tìm bàn...</div>}
                                             {isAuthenticated && tablesError && !loadingTables && selectedTime && <Alert variant="warning" size="sm" className="py-1 px-2">{tablesError}</Alert>}
                                             {/* Bàn Cụ Thể */}
-                                            {isAuthenticated && selectedTime && !loadingTables && availableTables.length > 0 && (
-                                                <Form.Select aria-label="Chọn bàn cụ thể" value={selectedTableId} onChange={(e) => { setSelectedTableId(e.target.value); setSelectedTableType(''); setSubmitError(null); }} className="mb-2" disabled={submitting}>
-                                                    <option value="">-- Chọn bàn cụ thể (Ưu tiên) --</option>
-                                                    {availableTables.map(table => (<option key={table.id} value={table.id}> {table.table_number} ({table.tableType?.name} - {table.capacity} khách) {table.tableType?.surcharge > 0 ? ` (+${parseInt(table.tableType.surcharge).toLocaleString('vi-VN')}đ)` : ''} </option>))}
+                                            {isAuthenticated && selectedTime && !loadingTables && filteredTables.length > 0 && (
+                                                <Form.Select aria-label="Chọn bàn cụ thể" value={selectedTableId} onChange={(e) => { setSelectedTableId(e.target.value); setSubmitError(null); }} className="mb-2" disabled={submitting} required>
+                                                    <option value="">-- Chọn bàn --</option>
+                                                    {filteredTables.map(table => {
+                                                        // Kiểm tra nhiều vị trí có thể chứa surcharge
+                                                        const surcharge = table?.tableType?.surcharge || 
+                                                                         table?.surcharge || 
+                                                                         table?.table_type?.surcharge ||
+                                                                         table?.type?.surcharge ||
+                                                                         0;
+                                                        const tableTypeName = table?.tableType?.name || 
+                                                                             table?.table_type?.name ||
+                                                                             table?.type?.name ||
+                                                                             'Loại bàn';
+                                                        const location = table?.location_description || '';
+                                                        
+                                                        return (
+                                                            <option key={table.id} value={table.id}>
+                                                                {table.table_number} - {table.capacity} khách - {tableTypeName} {location ? `(${location})` : ''} {surcharge > 0 ? ` (+${parseInt(surcharge).toLocaleString('vi-VN')}đ)` : ''}
+                                                            </option>
+                                                        );
+                                                    })}
                                                 </Form.Select>
                                             )}
-                                            {/* Loại Bàn */}
-                                            <Form.Select aria-label="Chọn loại bàn" value={selectedTableType} onChange={(e) => { setSelectedTableType(e.target.value); setSelectedTableId(''); setSubmitError(null); }} required={!selectedTableId} disabled={submitting || !isAuthenticated || loadingSlots || availableSlots.tableTypes.length === 0 || !!selectedTableId} isInvalid={isAuthenticated && !selectedTableId && !selectedTableType && !submitting && !loadingSlots && availableSlots.tableTypes.length > 0}>
-                                                <option value="">-- {selectedTableId ? 'Đã chọn bàn cụ thể' : 'Hoặc chọn loại bàn'} --</option>
-                                                {availableSlots.tableTypes.map((type) => (<option key={type.id} value={type.id}> {type.name} {type.surcharge > 0 ? ` (+${parseInt(type.surcharge).toLocaleString('vi-VN')}đ)` : ''} </option>))}
-                                            </Form.Select>
-                                            <Form.Control.Feedback type="invalid">Chọn bàn hoặc loại bàn.</Form.Control.Feedback>
-                                            {isAuthenticated && !loadingSlots && !slotsError && availableSlots.tableTypes.length === 0 && numGuests > 0 && !selectedTableId && (<small className="text-danger d-block mt-1">Không có loại bàn phù hợp.</small>)}
+                                            {isAuthenticated && !loadingSlots && !slotsError && availableSlots.tableTypes.length === 0 && numGuests > 0 && !selectedTableId && (<small className="text-danger d-block mt-1">Không có bàn phù hợp.</small>)}
                                         </Form.Group>
                                     </Col>
                                 </Row>
+                                
+                                {/* Sơ đồ bàn */}
+                                <div className="mt-3 text-center">
+                                    <div className="mb-2">
+                                        <small className="text-muted fw-semibold">
+                                            <i className="bi bi-info-circle me-1"></i>
+                                            Sơ đồ bàn
+                                        </small>
+                                    </div>
+                                    <div className="border rounded p-2 bg-light">
+                                        <Image 
+                                            src="/images/sodoban.png" 
+                                            alt="Sơ đồ bàn" 
+                                            fluid 
+                                            className="img-fluid"
+                                            style={{ 
+                                                maxHeight: '200px', 
+                                                objectFit: 'contain',
+                                                cursor: 'pointer',
+                                                transition: 'opacity 0.2s'
+                                            }}
+                                            onError={(e) => {
+                                                console.warn("Table layout image failed to load:", e.target.src);
+                                                e.target.style.display = 'none';
+                                            }}
+                                            onClick={handleImageClick}
+                                            onMouseEnter={(e) => e.target.style.opacity = '0.8'}
+                                            onMouseLeave={(e) => e.target.style.opacity = '1'}
+                                        />
+                                    </div>
+                                    <small className="text-muted d-block mt-1">
+                                        <i className="bi bi-zoom-in me-1"></i>
+                                        Click để xem ảnh to hơn
+                                    </small>
+                                </div>
                             </Card.Body>
                         </Card>
 
@@ -412,7 +514,7 @@ function BookingPage() {
 
                         {/* Nút Submit */}
                         <div className="d-grid bg-white p-3 border-top">
-                            <Button variant="primary" type="submit" disabled={submitting || !isAuthenticated || !selectedTime || (!selectedTableId && !selectedTableType)} size="lg">
+                            <Button variant="primary" type="submit" disabled={submitting || !isAuthenticated || !numGuests || numGuests < 1 || !selectedTime || !selectedTableId} size="lg">
                                 {submitting ? <><Spinner as="span" animation="border" size="sm" /> Đang xử lý...</> : 'Hoàn Tất Đặt Bàn'}
                             </Button>
                         </div>
@@ -421,6 +523,33 @@ function BookingPage() {
                     </Col>
                 </Row>
             </Form>
+
+            {/* Modal xem ảnh sơ đồ bàn */}
+            <Modal show={showImageModal} onHide={handleCloseImageModal} size="lg" centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>
+                        <i className="bi bi-image me-2"></i>
+                        Sơ đồ bàn
+                    </Modal.Title>
+                </Modal.Header>
+                <Modal.Body className="text-center p-0">
+                    <Image 
+                        src="/images/sodoban.png" 
+                        alt="Sơ đồ bàn" 
+                        fluid 
+                        className="img-fluid"
+                        onError={(e) => {
+                            console.warn("Table layout image failed to load in modal:", e.target.src);
+                            e.target.style.display = 'none';
+                        }}
+                    />
+                </Modal.Body>
+                <Modal.Footer>
+                    <small className="text-muted">
+                        Tham khảo vị trí bàn trước khi chọn
+                    </small>
+                </Modal.Footer>
+            </Modal>
         </Container>
     );
 }
